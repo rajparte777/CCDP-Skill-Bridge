@@ -394,11 +394,32 @@ body {
 .editor-layout {
   display: grid;
   grid-template-columns: 240px 1fr;
-  height: 620px;
+  height: 640px;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--bg-card);
+  transition: height 0.2s ease;
+}
+
+.editor-layout.with-runner {
+  height: 820px;
+}
+
+.editor-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 1s linear infinite;
 }
 
 .editor-sidebar {

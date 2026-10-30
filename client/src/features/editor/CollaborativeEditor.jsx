@@ -5,9 +5,10 @@ import { getSocket } from '../../services/socket';
 import {
   FileCode, Plus, Save, Users, AlertCircle, CheckCircle2, ShieldAlert,
   Folder, FolderPlus, FolderOpen, ChevronRight, ChevronDown, GitCommit,
-  ExternalLink, Trash2, GitBranch, Code
+  ExternalLink, Trash2, GitBranch, Code, Play, Terminal, Eye
 } from 'lucide-react';
 import Modal from '../../components/Modal';
+import CodeRunnerPanel from './CodeRunnerPanel';
 
 function GithubIcon({ size = 15 }) {
   return (
@@ -49,8 +50,41 @@ export default function CollaborativeEditor({ projectId, projectRole, currentUse
   const [commitSuccess, setCommitSuccess] = useState(null);
   const [commitError, setCommitError] = useState(null);
 
+  // Runner & Live Preview states
+  const [isRunnerOpen, setIsRunnerOpen] = useState(false);
+  const [activeRunnerTab, setActiveRunnerTab] = useState('console'); // 'console' | 'preview'
+  const [runTrigger, setRunTrigger] = useState(0);
+
   const editorRef = useRef(null);
   const isRemoteChange = useRef(false);
+
+  function handleRunCode() {
+    setIsRunnerOpen(true);
+    if (!activeDoc) {
+      setActiveRunnerTab('console');
+      setRunTrigger(prev => prev + 1);
+      return;
+    }
+    const ext = (activeDoc.file_path || '').split('.').pop().toLowerCase();
+    if (['html', 'htm', 'svg', 'css', 'md'].includes(ext)) {
+      setActiveRunnerTab('preview');
+    } else {
+      setActiveRunnerTab('console');
+    }
+    setRunTrigger(prev => prev + 1);
+  }
+
+  // Global Ctrl + Enter / Cmd + Enter shortcut for Run
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleRunCode();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeDoc, content]);
 
   useEffect(() => {
     const saved = localStorage.getItem('devcollab_github_pat');
@@ -507,7 +541,7 @@ export default function CollaborativeEditor({ projectId, projectRole, currentUse
       )}
 
       {/* Editor Layout */}
-      <div className="editor-layout">
+      <div className={`editor-layout ${isRunnerOpen ? 'with-runner' : ''}`}>
         {/* Left File Tree Sidebar */}
         <div className="editor-sidebar">
           <div className="editor-sidebar-header">
@@ -601,6 +635,44 @@ export default function CollaborativeEditor({ projectId, projectRole, currentUse
                 )}
               </div>
 
+              {/* Run Code Action */}
+              <button
+                className="btn btn-sm"
+                onClick={handleRunCode}
+                title="Run file (Ctrl + Enter)"
+                style={{
+                  background: '#1f6feb',
+                  color: '#ffffff',
+                  borderColor: 'rgba(240, 246, 252, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                <Play size={13} fill="currentColor" />
+                <span>Run</span>
+              </button>
+
+              {/* Terminal & Preview Dock Toggle */}
+              <button
+                className={`btn btn-secondary btn-sm ${isRunnerOpen ? 'active' : ''}`}
+                onClick={() => setIsRunnerOpen(prev => !prev)}
+                title="Toggle Output Terminal & Live Preview"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  background: isRunnerOpen ? '#21262d' : undefined,
+                  borderColor: isRunnerOpen ? 'var(--accent-blue)' : undefined,
+                  cursor: 'pointer'
+                }}
+              >
+                <Terminal size={13} />
+                <span>Terminal</span>
+              </button>
+
               {!isReadOnly && (
                 <>
                   <button className="btn btn-secondary btn-sm" onClick={handleManualSave} title="Save changes to DevCollab workspace">
@@ -624,7 +696,12 @@ export default function CollaborativeEditor({ projectId, projectRole, currentUse
           </div>
 
           {/* Monaco Mount */}
-          <div style={{ flex: 1, minHeight: 0 }}>
+          <div style={{
+            flex: isRunnerOpen ? '1 1 0%' : '1 1 auto',
+            minHeight: '200px',
+            overflow: 'hidden',
+            position: 'relative'
+          }}>
             {activeDoc ? (
               <Editor
                 height="100%"
@@ -649,6 +726,22 @@ export default function CollaborativeEditor({ projectId, projectRole, currentUse
               </div>
             )}
           </div>
+
+          {/* Interactive Code Runner & Preview Panel */}
+          {isRunnerOpen && (
+            <div style={{ height: '280px', flexShrink: 0, overflow: 'hidden' }}>
+              <CodeRunnerPanel
+                activeDoc={activeDoc}
+                content={content}
+                allDocuments={documents}
+                activeTab={activeRunnerTab}
+                setActiveTab={setActiveRunnerTab}
+                onClose={() => setIsRunnerOpen(false)}
+                runTrigger={runTrigger}
+                onRun={handleRunCode}
+              />
+            </div>
+          )}
         </div>
       </div>
 
