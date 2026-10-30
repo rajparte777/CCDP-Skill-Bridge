@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+*/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+client/.env
+server/.env
+
+# Local SQLite databases and storage
+server/data/*.sqlite
+server/data/*.sqlite3
+server/data/*.db
+server/data/*.sqlite-journal
+server/data/*.sqlite-wal
+server/data/*.sqlite-shm
+*.sqlite
+*.sqlite3
+*.db
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+client/dist/
+*.tsbuildinfo
+
+# Logs & Runtime data
+logs/
+*.log
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Test & Coverage
+coverage/
+.nyc_output/
+
+# Editor and IDE metadata
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
